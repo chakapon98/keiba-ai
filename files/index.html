@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="競馬AI">
+<meta name="theme-color" content="#1D9E75">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>競馬AI</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, "Hiragino Sans", sans-serif; background: #f5f5f7; color: #1d1d1f; padding: 16px; padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: max(16px, env(safe-area-inset-bottom)); line-height: 1.6; min-height: 100vh; }
+.container { max-width: 720px; margin: 0 auto; }
+.hero { background: linear-gradient(135deg, #1D9E75 0%, #0F6E56 100%); color: white; padding: 18px 20px; border-radius: 14px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(29, 158, 117, 0.2); }
+.hero h1 { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+.hero p { font-size: 12px; opacity: 0.9; }
+.race-info { background: white; padding: 12px 14px; border-radius: 10px; margin-bottom: 12px; font-size: 12px; color: #86868b; display: flex; gap: 8px; flex-wrap: wrap; }
+.race-info strong { color: #1d1d1f; }
+.tag-g1 { background: #FCEBEB; color: #791F1F; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 10px; }
+.card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.card h2 { font-size: 14px; font-weight: 500; margin-bottom: 10px; color: #1d1d1f; display: flex; align-items: center; gap: 8px; }
+.card-num { background: #f5f5f7; color: #86868b; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+.going-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.gb { padding: 12px 4px; border: 1.5px solid #e5e5e7; background: white; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 500; color: #1d1d1f; transition: all 0.15s; touch-action: manipulation; }
+.gb:active { transform: scale(0.97); }
+.gb.active { background: #1D9E75; color: white; border-color: #1D9E75; }
+.gb .going-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+.bonus-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.bonus-table th { background: #f5f5f7; padding: 8px 4px; font-weight: 500; color: #86868b; font-size: 10px; text-align: center; border-bottom: 0.5px solid #e0e0e0; }
+.bonus-table th.left { text-align: left; padding-left: 10px; }
+.bonus-table td { padding: 7px 4px; text-align: center; border-bottom: 0.5px solid #f0f0f0; font-size: 11px; }
+.bonus-table td.left { text-align: left; padding-left: 10px; font-weight: 500; }
+.bonus-table tr.active-col-1 td:nth-child(2),
+.bonus-table tr.active-col-2 td:nth-child(3),
+.bonus-table tr.active-col-3 td:nth-child(4),
+.bonus-table tr.active-col-4 td:nth-child(5) { background: #FAEEDA; font-weight: 500; color: #854F0B; }
+.horse-list { display: grid; gap: 8px; }
+.horse-card { background: white; border: 0.5px solid #e5e5e7; border-radius: 10px; padding: 10px 14px; }
+.horse-card.top1 { background: linear-gradient(to right, #FAEEDA 0%, #FFF8EC 100%); border-color: #EF9F27; border-width: 1.5px; }
+.horse-card.top2 { background: linear-gradient(to right, #f5f5f7 0%, #fafafa 100%); border-color: #888780; }
+.horse-card.top3 { background: linear-gradient(to right, #f0f7e8 0%, #f8fbf3 100%); border-color: #639922; }
+.hc-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.hc-rank { font-size: 18px; font-weight: 500; min-width: 24px; text-align: center; }
+.hc-num { background: #185FA5; color: white; width: 26px; height: 26px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
+.hc-name { font-size: 13px; font-weight: 500; flex: 1; }
+.hc-blood { font-size: 9px; color: #86868b; margin-top: 2px; line-height: 1.5; }
+.hc-bottom { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.hc-stat { background: #f5f5f7; border-radius: 6px; padding: 6px 4px; text-align: center; }
+.hc-stat-label { font-size: 9px; color: #86868b; margin-bottom: 2px; }
+.hc-stat-val { font-size: 13px; font-weight: 500; color: #1d1d1f; }
+.hc-stat-val.up { color: #0F6E56; }
+.hc-stat-val.down { color: #A32D2D; }
+.tag { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 6px; font-weight: 500; margin-right: 3px; }
+.tag-ss { background: #FAEEDA; color: #854F0B; }
+.tag-nd { background: #E6F1FB; color: #185FA5; }
+.tag-mp { background: #E1F5EE; color: #0F6E56; }
+.tag-other { background: #f5f5f7; color: #86868b; }
+.golden-badge { background: linear-gradient(135deg, #EF9F27, #FAC775); color: white; font-size: 9px; padding: 2px 7px; border-radius: 8px; margin-left: 6px; font-weight: 500; }
+.note { background: #FAEEDA; border-left: 3px solid #EF9F27; padding: 10px 12px; border-radius: 4px; font-size: 11px; color: #633806; line-height: 1.7; margin-top: 10px; }
+.note strong { color: #412402; }
+.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.sum-card { background: white; border-radius: 10px; padding: 10px 8px; text-align: center; }
+.sum-label { font-size: 9px; color: #86868b; margin-bottom: 2px; }
+.sum-val { font-size: 13px; font-weight: 500; color: #1d1d1f; }
+.sum-val.gold { color: #854F0B; }
+.sum-val.green { color: #0F6E56; }
+.footer { text-align: center; font-size: 10px; color: #86868b; margin-top: 16px; padding: 12px; opacity: 0.7; }
+.install-banner { display: none; background: #1D9E75; color: white; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; font-size: 12px; line-height: 1.5; }
+.install-banner.show { display: block; }
+.install-banner button { background: white; color: #1D9E75; border: none; padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; margin-left: 8px; cursor: pointer; }
+@media (display-mode: standalone) {
+  body { padding-top: max(16px, env(safe-area-inset-top)); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div id="install-banner" class="install-banner">
+  📱 ホーム画面に追加するとアプリのように使えます
+  <button onclick="hideInstallBanner()">×</button>
+</div>
+
+<div class="hero">
+  <h1>🏇 競馬AI</h1>
+  <p>血統×馬場 動的評価システム</p>
+</div>
+
+<div class="race-info">
+  <span class="tag-g1">G1</span>
+  <strong>天皇賞・春 2026</strong>
+  <span>5/3 京都 芝3200m</span>
+</div>
+
+<div class="card">
+  <h2><span class="card-num">1</span>馬場状態を選択</h2>
+  <div class="going-buttons">
+    <button class="gb active" data-going="良" onclick="setGoing('良', 1)">
+      <span class="going-icon">☀️</span>良
+    </button>
+    <button class="gb" data-going="稍重" onclick="setGoing('稍重', 2)">
+      <span class="going-icon">🌥</span>稍重
+    </button>
+    <button class="gb" data-going="重" onclick="setGoing('重', 3)">
+      <span class="going-icon">🌧</span>重
+    </button>
+    <button class="gb" data-going="不良" onclick="setGoing('不良', 4)">
+      <span class="going-icon">⛈</span>不良
+    </button>
+  </div>
+</div>
+
+<div class="summary">
+  <div class="sum-card">
+    <div class="sum-label">本命◎</div>
+    <div class="sum-val gold" id="sum-honmei">—</div>
+  </div>
+  <div class="sum-card">
+    <div class="sum-label">対抗○</div>
+    <div class="sum-val green" id="sum-taikou">—</div>
+  </div>
+  <div class="sum-card">
+    <div class="sum-label">単穴▲</div>
+    <div class="sum-val" id="sum-tanana">—</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2><span class="card-num">2</span>血統×馬場 係数表</h2>
+  <table class="bonus-table" id="bonus-table">
+    <thead>
+      <tr>
+        <th class="left">血統タイプ</th>
+        <th>良</th>
+        <th>稍重</th>
+        <th>重</th>
+        <th>不良</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr id="row-ss"><td class="left"><span class="tag tag-ss">SS</span>サンデー系</td><td>1.05</td><td>1.00</td><td>0.90</td><td>0.85</td></tr>
+      <tr id="row-nd"><td class="left"><span class="tag tag-nd">ND</span>ノーザン系</td><td>0.95</td><td>1.05</td><td>1.20</td><td>1.30</td></tr>
+      <tr id="row-mp"><td class="left"><span class="tag tag-mp">MP</span>ミスプロ系</td><td>1.00</td><td>1.05</td><td>1.10</td><td>1.10</td></tr>
+      <tr id="row-golden" style="background:#fffaf0;"><td class="left"><span class="tag tag-ss">★</span>SS×母父ND</td><td>1.10</td><td>1.15</td><td>1.30</td><td>1.40</td></tr>
+      <tr id="row-other"><td class="left"><span class="tag tag-other">他</span>欧州・米血統</td><td>0.90</td><td>1.00</td><td>1.15</td><td>1.25</td></tr>
+    </tbody>
+  </table>
+  <div class="note">
+    <strong>SS×母父ND（黄金配合）</strong>は道悪馬場で最大×1.40まで爆発。ヴェルテンベルクが該当します。
+  </div>
+</div>
+
+<div class="card">
+  <h2><span class="card-num">3</span>出走馬スコア（馬場：<span id="current-going" style="color:#1D9E75;">良</span>）</h2>
+  <div class="horse-list" id="horses-list"></div>
+</div>
+
+<div class="footer">
+  ※ AI予想は参考情報です。馬券購入は自己責任で。
+</div>
+
+</div>
+
+<script>
+// 出走馬データ
+const horses = [
+  { num: 7, name: "クロワデュノール", sire: "SS", broodmare: "Other", base: 14, sire_full: "キタサンブラック", broodmare_full: "Cape Cross" },
+  { num: 3, name: "アドマイヤテラ", sire: "MP", broodmare: "SS", base: 13, sire_full: "レイデオロ", broodmare_full: "ハーツクライ" },
+  { num: 12, name: "ヘデントール", sire: "MP", broodmare: "SS", base: 13, sire_full: "ルーラーシップ", broodmare_full: "ステイゴールド" },
+  { num: 4, name: "アクアヴァーナル", sire: "Other", broodmare: "SS", base: 11, sire_full: "エピファネイア", broodmare_full: "ディープインパクト" },
+  { num: 8, name: "シンエンペラー", sire: "Other", broodmare: "Other", base: 12, sire_full: "シユーニ", broodmare_full: "Galileo" },
+  { num: 14, name: "ホーエリート", sire: "MP", broodmare: "SS", base: 13, sire_full: "ドゥラメンテ", broodmare_full: "ディープインパクト" },
+  { num: 11, name: "タガノデュード", sire: "Other", broodmare: "SS", base: 11, sire_full: "ヤマカツエース", broodmare_full: "ハーツクライ" },
+  { num: 13, name: "ミステリーウェイ", sire: "SS", broodmare: "ND", base: 10, sire_full: "ハービンジャー", broodmare_full: "Smart Strike" },
+  { num: 15, name: "ヴェルテンベルク", sire: "SS", broodmare: "ND", base: 8, sire_full: "キタサンブラック", broodmare_full: "フレンチデピュティ" },
+  { num: 6, name: "エヒト", sire: "SS", broodmare: "MP", base: 10, sire_full: "ルーラーシップ", broodmare_full: "クロフネ" },
+  { num: 1, name: "ヴェルミセル", sire: "SS", broodmare: "Other", base: 10, sire_full: "オルフェーヴル", broodmare_full: "Lemon Drop Kid" },
+  { num: 2, name: "サンライズソレイユ", sire: "SS", broodmare: "Other", base: 9, sire_full: "オルフェーヴル", broodmare_full: "Bernardini" },
+  { num: 10, name: "マイネルカンパーナ", sire: "Other", broodmare: "SS", base: 9, sire_full: "ゴールドシップ", broodmare_full: "ディープインパクト" },
+  { num: 9, name: "プレシャスデイ", sire: "Other", broodmare: "SS", base: 8, sire_full: "ニューイヤーズデイ", broodmare_full: "ディープインパクト" },
+  { num: 5, name: "ケイアイサンデラ", sire: "MP", broodmare: "Other", base: 7, sire_full: "ロードカナロア", broodmare_full: "Tapit" },
+];
+
+const COEF = {
+  "SS":     { "良": 1.05, "稍重": 1.00, "重": 0.90, "不良": 0.85 },
+  "ND":     { "良": 0.95, "稍重": 1.05, "重": 1.20, "不良": 1.30 },
+  "MP":     { "良": 1.00, "稍重": 1.05, "重": 1.10, "不良": 1.10 },
+  "Other":  { "良": 0.90, "稍重": 1.00, "重": 1.15, "不良": 1.25 },
+};
+
+const GOLDEN = { "良": 1.10, "稍重": 1.15, "重": 1.30, "不良": 1.40 };
+
+let currentGoing = "良";
+const MARKS = ["◎", "○", "▲", "△", "△"];
+
+function getCoef(horse, going) {
+  if (horse.sire === "SS" && horse.broodmare === "ND") {
+    return { coef: GOLDEN[going], type: "黄金配合" };
+  }
+  return { coef: COEF[horse.sire][going], type: "通常" };
+}
+
+function getTagClass(sys) {
+  if (sys === "SS") return "tag-ss";
+  if (sys === "ND") return "tag-nd";
+  if (sys === "MP") return "tag-mp";
+  return "tag-other";
+}
+
+function setGoing(going, colIdx) {
+  currentGoing = going;
+  document.querySelectorAll('.gb').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.gb[data-going="${going}"]`).classList.add('active');
+  document.getElementById('current-going').textContent = going;
+
+  // 係数表のハイライト
+  document.querySelectorAll('#bonus-table tbody tr').forEach(tr => {
+    tr.classList.remove('active-col-1', 'active-col-2', 'active-col-3', 'active-col-4');
+    tr.classList.add(`active-col-${colIdx}`);
+  });
+
+  renderHorses();
+}
+
+function renderHorses() {
+  const scored = horses.map(h => {
+    const { coef, type } = getCoef(h, currentGoing);
+    const score = Math.min(h.base * coef, 20);
+    const delta = score - h.base;
+    return { ...h, score: Math.round(score * 10) / 10, delta: Math.round(delta * 10) / 10, coef, type };
+  }).sort((a, b) => b.score - a.score);
+
+  // サマリー更新
+  document.getElementById('sum-honmei').textContent = scored[0].name;
+  document.getElementById('sum-taikou').textContent = scored[1].name;
+  document.getElementById('sum-tanana').textContent = scored[2].name;
+
+  const html = scored.map((h, i) => {
+    let deltaClass = 'hc-stat-val';
+    let deltaText = h.delta > 0 ? `+${h.delta}` : h.delta < 0 ? `${h.delta}` : '±0';
+    if (h.delta > 1.5) deltaClass = 'hc-stat-val up';
+    else if (h.delta < -0.5) deltaClass = 'hc-stat-val down';
+
+    const goldenBadge = h.type === "黄金配合" ? '<span class="golden-badge">黄金配合</span>' : '';
+    const mark = MARKS[i] || '';
+    const cardClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+
+    return `
+      <div class="horse-card ${cardClass}">
+        <div class="hc-top">
+          <div class="hc-rank">${mark || (i+1)}</div>
+          <div class="hc-num">${h.num}</div>
+          <div style="flex: 1; min-width: 0;">
+            <div class="hc-name">${h.name}${goldenBadge}</div>
+            <div class="hc-blood">
+              <span class="tag ${getTagClass(h.sire)}">父${h.sire}</span>${h.sire_full}
+              ×
+              <span class="tag ${getTagClass(h.broodmare)}">母父${h.broodmare}</span>${h.broodmare_full}
+            </div>
+          </div>
+        </div>
+        <div class="hc-bottom">
+          <div class="hc-stat">
+            <div class="hc-stat-label">基本</div>
+            <div class="hc-stat-val">${h.base}点</div>
+          </div>
+          <div class="hc-stat">
+            <div class="hc-stat-label">係数</div>
+            <div class="hc-stat-val">×${h.coef.toFixed(2)}</div>
+          </div>
+          <div class="hc-stat">
+            <div class="hc-stat-label">最終</div>
+            <div class="${deltaClass}">${h.score}点</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('horses-list').innerHTML = html;
+}
+
+// インストールバナー（Safari以外で）
+function hideInstallBanner() {
+  document.getElementById('install-banner').classList.remove('show');
+  localStorage.setItem('install-banner-hidden', '1');
+}
+
+if (!window.matchMedia('(display-mode: standalone)').matches &&
+    !window.navigator.standalone &&
+    !localStorage.getItem('install-banner-hidden')) {
+  setTimeout(() => {
+    document.getElementById('install-banner').classList.add('show');
+  }, 1500);
+}
+
+// Service Worker登録（オフライン対応）
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+// 初期表示
+setGoing('良', 1);
+</script>
+
+</body>
+</html>
